@@ -14,6 +14,10 @@ namespace FGDDumper
 
             string sidebarClass = "";
 
+            // used for embed description and image, can only pick from one game.
+            string BestDescription = "";
+            string BestIcon = "";
+
             foreach (var page in Pages)
             {
                 // i shouldnt have to wonder why this needs .ToUpper() to render the page in the tab, yet here we are!
@@ -41,6 +45,23 @@ namespace FGDDumper
                     isNonFGD = true;
                     sidebarClass = "nonFGD_item";
                 }
+
+                if (page.Description.Length > BestDescription.Length)
+                {
+                    BestDescription = page.Description;
+                }
+
+                if (page.IconPath.Length > BestIcon.Length)
+                {
+                    BestIcon = page.IconPath;
+                }
+            }
+
+            var imageString = string.Empty;
+
+            if (!string.IsNullOrEmpty(imageString))
+            {
+                imageString = $"image: {BestIcon}";
             }
 
             var MD =
@@ -49,6 +70,8 @@ namespace FGDDumper
             hide_table_of_contents: true
             {(!string.IsNullOrEmpty(sidebarClass) ? $"sidebar_class_name: {sidebarClass}" : string.Empty)}
             custom_edit_url: /HowToEdit/entity-page-info
+            description: "{BestDescription}"
+            {imageString}
             ---
 
             <!---
