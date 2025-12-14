@@ -70,7 +70,7 @@ namespace FGDDumper
             hide_table_of_contents: true
             {(!string.IsNullOrEmpty(sidebarClass) ? $"sidebar_class_name: {sidebarClass}" : string.Empty)}
             custom_edit_url: /HowToEdit/entity-page-info
-            description: "{BestDescription}"
+            description: "{WikiFilesGenerator.SanitizeInput(BestDescription)}"
             {imageString}
             ---
 

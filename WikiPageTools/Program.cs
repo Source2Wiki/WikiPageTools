@@ -10,7 +10,7 @@ namespace FGDDumper
 {
     public static class EntityPageTools
     {
-        private const string Version = "1.1.4";
+        private const string Version = "1.1.5";
 
         public static string WikiRoot { get; private set; } = string.Empty;
 
