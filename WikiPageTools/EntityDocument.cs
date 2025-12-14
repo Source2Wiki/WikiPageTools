@@ -61,7 +61,7 @@ namespace FGDDumper
 
             if (!string.IsNullOrEmpty(BestIcon))
             {
-                imageString = $"image: {BestIcon}";
+                imageString = $"image: {BestIcon.Replace("static/", "")}";
             }
 
             var MD =
