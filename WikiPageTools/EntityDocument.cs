@@ -59,7 +59,7 @@ namespace FGDDumper
 
             var imageString = string.Empty;
 
-            if (!string.IsNullOrEmpty(imageString))
+            if (!string.IsNullOrEmpty(BestIcon))
             {
                 imageString = $"image: {BestIcon}";
             }
