@@ -1,8 +1,8 @@
-using System;
 using System.Text.Json;
 using FGDDumper;
 
 namespace EntityPageTools;
+
 public static class EntityListToJson
 {
     public class ConEntry

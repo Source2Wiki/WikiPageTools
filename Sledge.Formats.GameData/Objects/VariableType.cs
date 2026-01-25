@@ -85,6 +85,8 @@
         Struct, // Source 2
         AnimGraph, // Source 2 (cs2)
         AnimGraphEnum, // Source 2 (cs2)
+        api, // Source2 (cs2)
+        animgraph2identifier, // Source2 (cs2)
 
         Cpp, // Source 2 (dota2)
         CollisionProperty, // Source 2 (dota2)
