@@ -18,6 +18,7 @@ namespace FGDDumper
     [JsonSerializable(typeof(EntityIndexEntry))]
     [JsonSerializable(typeof(EntityListToJson.ConEntry))]
     [JsonSerializable(typeof(List<EntityListToJson.ConEntry>))]
+    [JsonSerializable(typeof(List<EntityListToJson.ConDump>))]
     public partial class JsonContext : JsonSerializerContext
     {
     }

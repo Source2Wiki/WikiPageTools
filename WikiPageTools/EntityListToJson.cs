@@ -5,6 +5,12 @@ namespace EntityPageTools;
 
 public static class EntityListToJson
 {
+    public class ConDump
+    {
+        public long Timestamp { get; set; }
+        public List<ConEntry> Entries { get; set; } = [];
+    }
+
     public class ConEntry
     {
         public required string Name { get; set; }
@@ -15,7 +21,10 @@ public static class EntityListToJson
 
     public static string? ToJson(string file)
     {
-        var entries = new List<ConEntry>();
+        var conDump = new ConDump()
+        {
+            Timestamp = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds
+        };
 
         if (!File.Exists(file))
         {
@@ -48,9 +57,9 @@ public static class EntityListToJson
                 Description = WikiFilesGenerator.SanitizeInputTable(splitLine[3].Trim())
             };
 
-            entries.Add(conEntry);
+            conDump.Entries.Add(conEntry);
         }
 
-        return JsonSerializer.Serialize(entries, JsonContext.Default.ListConEntry);
+        return JsonSerializer.Serialize(conDump, JsonContext.Default.ConDump);
     }
 }

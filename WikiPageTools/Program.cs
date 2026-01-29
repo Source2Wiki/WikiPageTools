@@ -33,7 +33,7 @@ namespace FGDDumper
 
 #if DEBUG
             //test args
-            args = ["--root", "D:/Dev/Source2Wiki", "--generate_mdx"];
+            args = ["--root", "E:/Dev/Source2Wiki", "--entity_list_to_json", "E:/Dev/steamvr-condump.txt", "--game", "steamvr"];
 #endif
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
