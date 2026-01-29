@@ -44,6 +44,11 @@ namespace FGDDumper
             Logging.Log(Logging.BannerTitle("Deserialising JSON docs into page docs!"));
             foreach (var jsonDoc in jsonDocs)
             {
+                if (Path.GetFileNameWithoutExtension(jsonDoc) == "timestamp")
+                {
+                    continue;
+                }
+
                 var doc = JsonSerializer.Deserialize(File.ReadAllText(jsonDoc), JsonContext.Default.EntityDocument);
 
                 if (doc is null)
