@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -489,6 +490,9 @@ namespace FGDDumper
                     Logging.Log($"\nSaved document JSON to {docPath}!");
                 }
             }
+
+            var timestamp = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
+            File.WriteAllText(Path.Combine(EntityPageTools.RootDumpFolder, "timestamp.json"), timestamp.ToString(CultureInfo.InvariantCulture));
 
             Logging.Log($"\nProcessed and exported {pagesDictionary.Count} documents!");
         }

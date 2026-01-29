@@ -10,7 +10,7 @@ namespace FGDDumper
 {
     public static class EntityPageTools
     {
-        private const string Version = "1.1.5";
+        private const string Version = "1.2.5";
 
         public static string WikiRoot { get; private set; } = string.Empty;
 
@@ -33,7 +33,7 @@ namespace FGDDumper
 
 #if DEBUG
             //test args
-            args = ["--root", "E:/Dev/Source2Wiki", "--entity_list_to_json", "E:/Dev/steamvr-condump.txt", "--game", "steamvr"];
+            args = ["--root", "E:/Dev/Source2Wiki", "--dump_fgd", "--verbose"];
 #endif
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
@@ -182,7 +182,7 @@ namespace FGDDumper
                     return 1;
                 }
 
-                var json = EntityListToJson.ToJson(entity_list_to_json);
+                var json = ConvarListToJson.ToJson(entity_list_to_json);
                 var path = Path.Combine(WikiRoot, ConDumpFolder);
                 var file = $"condump_{gameClass.FileSystemName}.json";
                 Directory.CreateDirectory(path);

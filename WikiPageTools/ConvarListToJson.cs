@@ -3,12 +3,17 @@ using FGDDumper;
 
 namespace EntityPageTools;
 
-public static class EntityListToJson
+public static class ConvarListToJson
 {
     public class ConDump
     {
         public long Timestamp { get; set; }
         public List<ConEntry> Entries { get; set; } = [];
+
+        public ConDump()
+        {
+            Timestamp = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
+        }
     }
 
     public class ConEntry
@@ -21,10 +26,7 @@ public static class EntityListToJson
 
     public static string? ToJson(string file)
     {
-        var conDump = new ConDump()
-        {
-            Timestamp = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds
-        };
+        var conDump = new ConDump();
 
         if (!File.Exists(file))
         {
