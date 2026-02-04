@@ -84,13 +84,30 @@ namespace FGDDumper
 
             }
 
-            public Resource? LoadVPKFileCompiled(string filePath)
+            public Stream? LoadVPKFile(string filePath)
             {
                 CacheVPKContent();
 
                 foreach (var loader in GameFileLoaders)
                 {
-                    var resource = loader.LoadFileCompiled(filePath);
+                    var stream = loader.GetFileStream(filePath);
+
+                    if (stream != null)
+                    {
+                        return stream;
+                    }
+                }
+
+                return null;
+            }
+
+            public Resource? LoadVPKResourceCompiled(string filePath)
+            {
+                CacheVPKContent();
+
+                foreach (var loader in GameFileLoaders)
+                {
+                    var resource = loader.LoadFile(filePath);
 
                     if (resource != null)
                     {

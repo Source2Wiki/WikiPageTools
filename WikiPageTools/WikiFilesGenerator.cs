@@ -445,7 +445,7 @@ namespace FGDDumper
                             iconPath += ".vmat";
                         }
 
-                        var entityIconVmatResource = page.Game!.LoadVPKFileCompiled(iconPath);
+                        var entityIconVmatResource = page.Game!.LoadVPKResourceCompiled(iconPath);
 
                         if (entityIconVmatResource?.DataBlock != null)
                         {
@@ -457,7 +457,7 @@ namespace FGDDumper
                                 throw new InvalidDataException("Failed to get color texture for entity material!");
                             }
 
-                            var iconTexture = page.Game.LoadVPKFileCompiled(iconTexturePath);
+                            var iconTexture = page.Game.LoadVPKResourceCompiled(iconTexturePath);
 
                             if (Logging.Verbose)
                             {

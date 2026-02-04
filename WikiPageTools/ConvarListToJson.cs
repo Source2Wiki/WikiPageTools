@@ -1,5 +1,7 @@
+using System.Text;
 using System.Text.Json;
 using FGDDumper;
+using ValveResourceFormat.Serialization.KeyValues;
 
 namespace EntityPageTools;
 
@@ -22,15 +24,23 @@ public static class ConvarListToJson
         public string DefaultValue { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string[] flags { get; set; } = [];
+        public bool Cs2WorkshopWhitelisted { get; set; } = false;
     }
 
-    public static string? ToJson(string file)
+    public static string? ToJson(string file, GameFinder.Game game)
     {
         var conDump = new ConDump();
 
         if (!File.Exists(file))
         {
             return null;
+        }
+
+        KV3File? whitelistKV3 = null;
+        if (game.FileSystemName == "cs2")
+        {
+            var whitelistStream = game.LoadVPKFile("scripts/workshop_cvar_whitelist.txt");
+            whitelistKV3 = KeyValues3.ParseKVFile(whitelistStream!);
         }
 
         string[] allLines = File.ReadAllLines(file);
@@ -58,6 +68,11 @@ public static class ConvarListToJson
                 flags = flags,
                 Description = WikiFilesGenerator.SanitizeInputTable(splitLine[3].Trim())
             };
+
+            if (whitelistKV3 != null && whitelistKV3.Root.GetArray<string>("whitelist_cvars").Contains(conEntry.Name))
+            {
+                conEntry.Cs2WorkshopWhitelisted = true;
+            }
 
             conDump.Entries.Add(conEntry);
         }
