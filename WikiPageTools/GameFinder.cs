@@ -101,6 +101,36 @@ namespace FGDDumper
                 return null;
             }
 
+            public List<Resource> GetResourcesByType(string fileType)
+            {
+                CacheVPKContent();
+
+                List<Resource> materials = [];
+
+                foreach (var loader in GameFileLoaders)
+                {
+                    if (loader.CurrentPackage?.Entries == null)
+                    {
+                        continue;
+                    }
+
+                    foreach (var entry in loader.CurrentPackage.Entries)
+                    {
+                        if (entry.Key == fileType)
+                        {
+                            foreach (var packageEntry in entry.Value)
+                            {
+                                var material = new Resource();
+                                material.Read(loader.CurrentPackage.GetMemoryMappedStreamIfPossible(packageEntry));
+                                materials.Add(material);
+                            }
+                        }
+                    }
+                }
+
+                return materials;
+            }
+
             public Resource? LoadVPKResourceCompiled(string filePath)
             {
                 CacheVPKContent();

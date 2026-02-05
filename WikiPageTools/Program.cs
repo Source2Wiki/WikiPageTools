@@ -5,12 +5,13 @@ using System.Text;
 using ConsoleAppFramework;
 using EntityPageTools;
 using FileWatcherEx;
+using WikiPageTools;
 
 namespace FGDDumper
 {
     public static class EntityPageTools
     {
-        private const string Version = "1.2.6";
+        private const string Version = "1.3.6";
 
         public static string WikiRoot { get; private set; } = string.Empty;
 
@@ -25,6 +26,9 @@ namespace FGDDumper
 
         public const string ConDumpFolder = "con_dump";
 
+        public const string ToolTextureDumpFolder = "tooltex_dump";
+        public const string ToolTextureImageDumpFolder = "static/tooltex_dump/img";
+
         public const string OverridesFolder = "fgd_dump_overrides";
         public static string RootOverridesFolder { get; private set; } = string.Empty;
 
@@ -33,7 +37,7 @@ namespace FGDDumper
 
 #if DEBUG
             //test args
-            args = ["--root", "E:/Dev/Source2Wiki", "--entity_list_to_json", "E:\\Dev\\cs2-condump.txt", "--game", "cs2"];
+            args = ["--root", "E:/Dev/Source2Wiki", "--dump_tool_tex"];
 #endif
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
@@ -66,15 +70,18 @@ namespace FGDDumper
         /// <param name="cs_script_tablegen">converts point_script.d.ts into an mdx table</param>
         /// <param name="entity_list_to_json">converts a console var/command dump from the `cvarlist` command into a json file</param>
         /// <param name="game">converts a console var/command dump from the `cvarlist` command into a json file</param>
+        /// <param name="dump_tool_tex">Dumps tool textures for all games as json, 
         public static int Run(
             string root,
             bool generate_mdx,
             bool dump_fgd,
             bool verbose,
             bool no_listen,
+            bool dump_tool_tex,
             string? game = "",
             string? entity_list_to_json = "",
-            string? cs_script_tablegen = "")
+            string? cs_script_tablegen = ""
+            )
         {
             //omega stupid parser built in 15 minutes because im lazy
             if (!string.IsNullOrEmpty(cs_script_tablegen))
@@ -143,7 +150,7 @@ namespace FGDDumper
                 return 1;
             }
 
-            if (!dump_fgd && !generate_mdx && string.IsNullOrEmpty(entity_list_to_json))
+            if (!dump_fgd && !generate_mdx && !dump_tool_tex && string.IsNullOrEmpty(entity_list_to_json))
             {
                 Logging.Log("At least one mode argument must be provided!");
                 return 1;
@@ -225,6 +232,11 @@ namespace FGDDumper
                     {
                     }
                 }
+            }
+
+            if (dump_tool_tex)
+            {
+                ToolTexturesDumper.DumpToolTexturesToJsonForAllGames();
             }
 
             return 0;

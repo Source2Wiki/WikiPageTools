@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using EntityPageTools;
+using WikiPageTools;
 using static FGDDumper.JsonStuff;
 using static FGDDumper.WikiFilesGenerator;
 
@@ -18,7 +19,9 @@ namespace FGDDumper
     [JsonSerializable(typeof(EntityIndexEntry))]
     [JsonSerializable(typeof(ConvarListToJson.ConEntry))]
     [JsonSerializable(typeof(List<ConvarListToJson.ConEntry>))]
-    [JsonSerializable(typeof(List<ConvarListToJson.ConDump>))]
+    [JsonSerializable(typeof(ConvarListToJson.ConDump))]
+    [JsonSerializable(typeof(List<ToolTexturesDumper.ToolMaterial>))]
+    [JsonSerializable(typeof(ToolTexturesDumper.ToolMaterialDump))]
     public partial class JsonContext : JsonSerializerContext
     {
     }

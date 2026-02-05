@@ -6,6 +6,7 @@ using EntityPageTools;
 using Sledge.Formats.FileSystem;
 using Sledge.Formats.GameData;
 using Sledge.Formats.GameData.Objects;
+using ValveResourceFormat;
 using ValveResourceFormat.IO;
 using ValveResourceFormat.ResourceTypes;
 
@@ -463,15 +464,11 @@ namespace FGDDumper
                             {
                                 Logging.Log($"Read '{iconTexture!.FileName}', extracting:");
                             }
-                            TextureContentFile textureExtract = (TextureContentFile)new TextureExtract(iconTexture).ToContentFile();
-                            using var bitmap = textureExtract.Bitmap;
-                            using var data = bitmap.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
 
-                            page.IconPath = page.GetImageRelativePath();
                             Directory.CreateDirectory(Path.Combine(EntityPageTools.WikiRoot, page.GetImageRelativeFolder()));
                             var finalIconPath = Path.Combine(EntityPageTools.WikiRoot, page.IconPath);
-                            using var stream = File.OpenWrite(finalIconPath);
-                            data.SaveTo(stream);
+                            SavePNGFromTextureResource(iconTexture!, finalIconPath);
+
                             if (Logging.Verbose)
                             {
                                 Logging.Log($"Saved icon texture to '{finalIconPath}'!");
@@ -590,6 +587,21 @@ namespace FGDDumper
         {
             return SanitizeInput(input).Replace("|", "\\|");
         }
+
+        public static void SavePNGFromTextureResource(Resource texture, string pathToSaveTo)
+        {
+            if (Logging.Verbose)
+            {
+                Logging.Log($"Read '{texture!.FileName}', extracting:");
+            }
+            TextureContentFile textureExtract = (TextureContentFile)new TextureExtract(texture).ToContentFile();
+            using var bitmap = textureExtract.Bitmap;
+            using var data = bitmap.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
+
+            using var stream = File.OpenWrite(pathToSaveTo);
+            data.SaveTo(stream);
+        }
+
     }
 
     public static class RecursiveFileGetter
