@@ -55,6 +55,8 @@ public static class ToolTexturesDumper
             ToolMaterials = FindGameToolMaterials(game)
         };
 
+        ToolMaterialDump.ToolMaterials.Sort((x, y) => x.Name.CompareTo(y.Name));
+
         var json = JsonSerializer.Serialize(ToolMaterialDump, JsonContext.Default.ToolMaterialDump);
 
         var path = Path.Combine(FGDDumper.EntityPageTools.WikiRoot, FGDDumper.EntityPageTools.ToolTextureDumpFolder);
