@@ -11,7 +11,7 @@ namespace FGDDumper
 {
     public static class EntityPageTools
     {
-        private const string Version = "1.3.1";
+        private const string Version = "1.3.2";
 
         public static string WikiRoot { get; private set; } = string.Empty;
 
@@ -37,7 +37,7 @@ namespace FGDDumper
 
 #if DEBUG
             //test args
-            args = ["--root", "E:/Dev/Source2Wiki", "--dump_tool_tex"];
+            args = ["--root", "E:/Dev/Source2Wiki", "--cs_script_tablegen", "E:\\Steam\\steamapps\\common\\Counter-Strike Global Offensive\\content\\csgo\\maps\\editor\\zoo\\scripts\\point_script.d.ts"];
 #endif
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
@@ -83,53 +83,18 @@ namespace FGDDumper
             string? cs_script_tablegen = ""
             )
         {
-            //omega stupid parser built in 15 minutes because im lazy
+            //parser built by clanker because im lazy
             if (!string.IsNullOrEmpty(cs_script_tablegen))
             {
-                if (!File.Exists(cs_script_tablegen))
+                var parsed = CSScriptTSParser.ParseScriptFile(cs_script_tablegen);
+                if (!parsed)
                 {
                     return 1;
                 }
 
-                string[] allLines = File.ReadAllLines(cs_script_tablegen);
+                Logging.Log("Done! ");
 
-                string funcDescription = "";
-                string funcSignature = "";
-                string funcName = "";
-
-                string generatedTable = "";
-
-                foreach (var line in allLines)
-                {
-                    var trimmedLine = line.Trim();
-
-                    // find one line comments above function signatures
-                    // example: /** Log a message to the console. */
-                    var startIndex = trimmedLine.IndexOf("/**");
-                    var endIndex = trimmedLine.IndexOf("*/");
-
-                    if (startIndex != -1 && endIndex != -1)
-                    {
-                        // need to offset as it gives the start of the string
-                        var offsetStartIndex = startIndex + 4;
-                        funcDescription = trimmedLine.Substring(offsetStartIndex, endIndex - offsetStartIndex);
-                    }
-
-                    // find the function declaration
-                    if (trimmedLine.Contains("("))
-                    {
-                        funcSignature = trimmedLine;
-                        funcName = trimmedLine.Substring(0, trimmedLine.IndexOf("("));
-
-                        generatedTable += $"|{WikiFilesGenerator.SanitizeInputTable(funcName)}|{WikiFilesGenerator.SanitizeInputTable(funcSignature)}|{WikiFilesGenerator.SanitizeInputTable(funcDescription)}|\n";
-
-                        funcDescription = "";
-                        funcSignature = "";
-                        funcName = "";
-                    }
-                }
-
-                File.WriteAllText(Path.Combine(Path.GetDirectoryName(cs_script_tablegen)!, "cs_script_doc_output.txt"), generatedTable);
+                return 0;
             }
 
             if (string.IsNullOrEmpty(root))
