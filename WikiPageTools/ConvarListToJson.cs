@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using FGDDumper;
+using ValveKeyValue;
 using ValveResourceFormat.Serialization.KeyValues;
 
 namespace EntityPageTools;
@@ -36,11 +37,11 @@ public static class ConvarListToJson
             return null;
         }
 
-        KV3File? whitelistKV3 = null;
+        ValveKeyValue.KVDocument? whitelistKV3 = null;
         if (game.FileSystemName == "cs2")
         {
             var whitelistStream = game.LoadVPKFile("scripts/workshop_cvar_whitelist.txt");
-            whitelistKV3 = KeyValues3.ParseKVFile(whitelistStream!);
+            whitelistKV3 = KVSerializer.Create(KVSerializationFormat.KeyValues3Text).Deserialize(whitelistStream!);
         }
 
         string[] allLines = File.ReadAllLines(file);

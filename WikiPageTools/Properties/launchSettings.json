@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "WikiPageTools": {
+      "commandName": "Project",
+      "commandLineArgs": "--root \"E:/Dev/Source2Wiki\" --dump_fgd"
+    }
+  }
+}

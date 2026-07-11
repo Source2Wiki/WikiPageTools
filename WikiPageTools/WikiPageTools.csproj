@@ -15,7 +15,7 @@
     </PackageReference>
     <PackageReference Include="FileWatcherEx" Version="2.6.0" />
     <PackageReference Include="System.Text.Json" Version="9.0.6" />
-    <PackageReference Include="ValveResourceFormat" Version="17.0.5499" />
+    <PackageReference Include="ValveResourceFormat" Version="19.2.6339" />
   </ItemGroup>
 
   <ItemGroup>

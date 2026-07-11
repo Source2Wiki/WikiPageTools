@@ -57,7 +57,7 @@ namespace FGDDumper
                     throw new InvalidDataException("Failed to deserialise json document!");
                 }
 
-                docsDictionary.Add(doc.Name, doc);
+                docsDictionary.Add(doc.Name!, doc);
             }
             Logging.Log("Finished deserialising");
 
@@ -465,13 +465,14 @@ namespace FGDDumper
                                 Logging.Log($"Read '{iconTexture!.FileName}', extracting:");
                             }
 
-                            Directory.CreateDirectory(Path.Combine(EntityPageTools.WikiRoot, page.GetImageRelativeFolder()));
-                            var finalIconPath = Path.Combine(EntityPageTools.WikiRoot, page.IconPath);
-                            SavePNGFromTextureResource(iconTexture!, finalIconPath);
+                            var imgpath = Path.Combine(EntityPageTools.WikiRoot, page.GetImageRelativeFolder());
+                            Directory.CreateDirectory(imgpath);
+                            var imgFilePath = Path.Combine(imgpath, $"{Path.GetFileNameWithoutExtension(page.IconPath)}.png");
+                            SavePNGFromTextureResource(iconTexture!, imgFilePath);
 
                             if (Logging.Verbose)
                             {
-                                Logging.Log($"Saved icon texture to '{finalIconPath}'!");
+                                Logging.Log($"Saved icon texture to '{imgFilePath}'!");
                             }
                         }
                         else

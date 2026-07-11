@@ -104,7 +104,7 @@ public static class ToolTexturesDumper
 
             foreach (var (key, value) in material.FloatAttributes)
             {
-                attributes.Add(key, value);
+                attributes.Add(key!, value);
             }
 
             foreach (var (key, value) in material.IntAttributes)

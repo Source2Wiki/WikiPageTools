@@ -34,11 +34,6 @@ namespace FGDDumper
 
         public static void Main(string[] args)
         {
-
-#if DEBUG
-            //test args
-            args = ["--root", "E:/Dev/Source2Wiki", "--cs_script_tablegen", "E:\\Steam\\steamapps\\common\\Counter-Strike Global Offensive\\content\\csgo\\maps\\editor\\zoo\\scripts\\point_script.d.ts"];
-#endif
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 

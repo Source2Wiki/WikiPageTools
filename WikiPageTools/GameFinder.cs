@@ -137,7 +137,7 @@ namespace FGDDumper
 
                 foreach (var loader in GameFileLoaders)
                 {
-                    var resource = loader.LoadFile(filePath);
+                    var resource = loader.LoadFile($"{filePath}_c");
 
                     if (resource != null)
                     {

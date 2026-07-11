@@ -4,7 +4,7 @@ namespace EntityPageTools
 {
     static class Logging
     {
-        public static bool Verbose = false;
+        public static bool Verbose = true;
 
         private const char BannerChar = '-';
 

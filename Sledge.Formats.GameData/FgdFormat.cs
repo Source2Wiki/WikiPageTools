@@ -632,7 +632,15 @@ namespace Sledge.Formats.GameData
             TokenParsing.Expect(it, TokenType.Symbol, Symbols.OpenBrace);
             while (it.Current?.Is(TokenType.Symbol, Symbols.CloseBrace) == false)
             {
-                var metaKey = TokenParsing.Expect(it, TokenType.Name).Value;
+                var metaKey = string.Empty;
+                if (it.Current.Type == TokenType.String)
+                {
+                    metaKey = TokenParsing.Expect(it, TokenType.String).Value;
+                }
+                else if (it.Current?.Type == TokenType.Name)
+                {
+                    metaKey = TokenParsing.Expect(it, TokenType.Name).Value;
+                }
 
                 TokenParsing.Expect(it, TokenType.Symbol, Symbols.Equal);
                 if (it.Current?.Is(TokenType.Symbol, Symbols.OpenBrace) == true)
