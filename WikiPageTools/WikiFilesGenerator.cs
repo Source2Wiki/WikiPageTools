@@ -306,7 +306,7 @@ namespace FGDDumper
 
             foreach (var game in gamesList)
             {
-                Logging.Log($"Name: '{game.Name}' | FileSystemName: '{game.FileSystemName}' | GameFolder: '{game.GameFolder}' | GameInfoFolder: '{game.PathToGameinfo}'");
+                Logging.Log($"Name: '{game.Name}' | FileSystemName: '{game.FileSystemName}' | AppId: '{game.AppId}' | GameFolder: '{game.GameFolder}' | GameInfoFolder: '{game.PathToGameinfo}'");
                 Logging.LogS("FGDs to read:");
                 foreach (var fgd in game.FgdFilesNames)
                 {
@@ -323,7 +323,7 @@ namespace FGDDumper
                 Logging.Log(Logging.BannerTitle($"Processing game '{game.Name}'"));
                 Logging.Log();
 
-                var gamePath = GameFinder.GetSystemPathForGame(game);
+                var gamePath = game.GetSystemPath();
 
                 if (string.IsNullOrEmpty(gamePath))
                 {

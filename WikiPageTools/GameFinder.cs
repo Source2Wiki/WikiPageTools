@@ -1,6 +1,5 @@
 using System.Text.RegularExpressions;
 using EntityPageTools;
-using Microsoft.Win32;
 using SteamDatabase.ValvePak;
 using ValveResourceFormat;
 using ValveResourceFormat.IO;
@@ -9,42 +8,6 @@ namespace FGDDumper
 {
     public static class GameFinder
     {
-        public static string? SteamPath { get; }
-        public static List<string> SteamLibraryPaths { get; } = [];
-
-        static GameFinder()
-        {
-            try
-            {
-                SteamPath = GetSteamInstallPath()!;
-            }
-            catch (Exception)
-            {
-            }
-
-            if (string.IsNullOrEmpty(SteamPath))
-            {
-                Logging.Log("Failed to find Steam on this machine! dumping FGD is disabled.", ConsoleColor.Red);
-                return;
-            }
-
-            Logging.Log();
-            Logging.Log($"Steam path: {SteamPath}");
-            Logging.Log();
-            Logging.Log("Getting steam libraries!");
-            Logging.Log();
-
-            SteamLibraryPaths = GetSteamLibraries(SteamPath);
-
-            Logging.Log("Steam libraries:");
-
-            foreach (var lib in SteamLibraryPaths)
-            {
-                Logging.Log(lib);
-            }
-
-        }
-
         private const string GameInfo = "gameinfo.gi";
 
         // could read name from gameinfo but not going to bother with all that when adding it here manually is trivial
@@ -53,6 +16,9 @@ namespace FGDDumper
         {
             public string Name { get; init; }
             public string FileSystemName { get; init; }
+            public int AppId { get; init; }
+
+            /// <summary>Folder holding the game's content, relative to the steam install folder of <see cref="AppId"/>.</summary>
             public string GameFolder { get; init; }
             public string PathToGameinfo { get; init; }
             public string[] FgdFilesNames { get; init; }
@@ -60,9 +26,45 @@ namespace FGDDumper
             private List<GameFileLoader> GameFileLoaders = [];
             private bool CachedGameFileLoaders = false;
 
+            // empty means we looked and the game is not installed, null means we have not looked yet
+            private string? CachedSystemPath;
+
+            /// <summary>
+            /// Content folder of this game on this machine, or an empty string when it is not installed.
+            /// The steam install folder is resolved by app id, so a renamed or relocated library is fine.
+            /// </summary>
+            public string GetSystemPath()
+            {
+                if (CachedSystemPath != null)
+                {
+                    return CachedSystemPath;
+                }
+
+                CachedSystemPath = string.Empty;
+
+                var steamGame = GameFolderLocator.FindSteamGameByAppId(AppId);
+
+                if (steamGame is null)
+                {
+                    return CachedSystemPath;
+                }
+
+                var gamePath = Path.Combine(steamGame.Value.GamePath, GameFolder);
+
+                // an installed app is not necessarily a usable one, the game content can be a separate download
+                if (File.Exists(Path.Combine(gamePath, PathToGameinfo, GameInfo)))
+                {
+                    CachedSystemPath = gamePath;
+                }
+
+                return CachedSystemPath;
+            }
+
             public void CacheVPKContent()
             {
-                if (string.IsNullOrEmpty(GetSystemPathForGame(this)))
+                var systemPath = GetSystemPath();
+
+                if (string.IsNullOrEmpty(systemPath))
                 {
                     return;
                 }
@@ -71,13 +73,13 @@ namespace FGDDumper
                 {
                     CachedGameFileLoaders = true;
 
-                    var gameinfoPath = Path.Combine(GetSystemPathForGame(this)!, PathToGameinfo, "gameinfo.gi");
+                    var gameinfoPath = Path.Combine(systemPath, PathToGameinfo, GameInfo);
                     var gameEntries = ExtractGameEntries(gameinfoPath);
 
                     foreach (var game in gameEntries)
                     {
                         var package = new Package();
-                        package.Read(Path.Combine(GetSystemPathForGame(this)!, game, "pak01_dir.vpk"));
+                        package.Read(Path.Combine(systemPath, game, "pak01_dir.vpk"));
                         GameFileLoaders.Add(new GameFileLoader(package, package.FileName));
                     }
                 }
@@ -190,10 +192,11 @@ namespace FGDDumper
                 return gameEntries;
             }
 
-            public Game(string name, string fileSystemName, string gameFolder, string pathToGameinfo, string[] fgdFilesNames)
+            public Game(string name, string fileSystemName, int appId, string gameFolder, string pathToGameinfo, string[] fgdFilesNames)
             {
                 Name = name;
                 FileSystemName = fileSystemName;
+                AppId = appId;
                 GameFolder = gameFolder;
                 PathToGameinfo = pathToGameinfo;
                 FgdFilesNames = fgdFilesNames;
@@ -202,10 +205,10 @@ namespace FGDDumper
 
         public static readonly List<Game> GameList = new()
         {
-            new Game("Counter-Strike 2", "cs2", "Counter-Strike Global Offensive\\game", "csgo", ["csgo.fgd"]),
-            new Game("Half-Life: Alyx", "hla", "Half-Life Alyx\\game", "hlvr", ["hlvr.fgd"]),
-            new Game("Dota 2", "dota2", "dota 2 beta\\game", "dota", ["dota.fgd"]),
-            new Game("SteamVR Home", "steamvr", "SteamVR\\tools\\steamvr_environments\\game", "steamtours", ["steamtours.fgd"]),
+            new Game("Counter-Strike 2", "cs2", 730, "game", "csgo", ["csgo.fgd"]),
+            new Game("Half-Life: Alyx", "hla", 546560, "game", "hlvr", ["hlvr.fgd"]),
+            new Game("Dota 2", "dota2", 570, "game", "dota", ["dota.fgd"]),
+            new Game("SteamVR Home", "steamvr", 250820, "tools\\steamvr_environments\\game", "steamtours", ["steamtours.fgd"]),
         };
 
         public static Game? GetGameByFileSystemName(string? name)
@@ -235,61 +238,6 @@ namespace FGDDumper
             }
 
             return outputString;
-        }
-
-        private static string? GetSteamInstallPath()
-        {
-            string? steamPath = null;
-            using (RegistryKey? key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Wow6432Node\Valve\Steam"))
-            {
-                if (key != null)
-                {
-                    steamPath = key.GetValue("InstallPath") as string;
-                }
-            }
-
-            return steamPath;
-        }
-
-        private static List<string> GetSteamLibraries(string steamPath)
-        {
-            List<string> libraries = new List<string>();
-            string vdfPath = Path.Combine(steamPath, "steamapps", "libraryfolders.vdf");
-
-            if (File.Exists(vdfPath))
-            {
-                string[] lines = File.ReadAllLines(vdfPath);
-                Regex regex = new Regex(@"\""path\""\s+\""(.+?)\""");
-
-                foreach (string line in lines)
-                {
-                    Match match = regex.Match(line);
-                    if (match.Success)
-                    {
-                        string libraryPath = match.Groups[1].Value.Replace(@"\\", @"\");
-                        libraries.Add(libraryPath);
-                    }
-                }
-            }
-
-            return libraries;
-        }
-
-        public static string? GetSystemPathForGame(Game game)
-        {
-            foreach (string steamLibraryPath in SteamLibraryPaths)
-            {
-                string gamePath = Path.Combine(steamLibraryPath, "steamapps", "common", game.GameFolder);
-                if (Path.Exists(gamePath))
-                {
-                    if (File.Exists(Path.Combine(gamePath, game.PathToGameinfo, GameInfo)))
-                    {
-                        return gamePath;
-                    }
-                }
-            }
-
-            return string.Empty;
         }
     }
 }
