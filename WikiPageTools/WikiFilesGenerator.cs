@@ -146,7 +146,10 @@ namespace FGDDumper
             }
 
             var entityIndexJsonText = JsonSerializer.Serialize(entityIndex, JsonContext.Default.ListEntityIndexEntry);
-            File.WriteAllText(WikiPaths.ToDisk(WikiPaths.Combine("static", EntityPageTools.DumpFolder, "entityIndex.json")), entityIndexJsonText);
+            var entityIndexPath = WikiPaths.ToDisk(WikiPaths.Combine("static", EntityPageTools.DumpFolder, "entityIndex.json"));
+
+            Directory.CreateDirectory(Path.GetDirectoryName(entityIndexPath)!);
+            File.WriteAllText(entityIndexPath, entityIndexJsonText);
 
 
             Logging.Log($"\nWrote '{wroteDocs}' document(s), skipped '{skippedDocs}' document(s) with contents that did not change");
