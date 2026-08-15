@@ -306,7 +306,7 @@ namespace FGDDumper
                         Description = overrideOption.Description;
                     }
 
-                    if (Key != null)
+                    if (overrideOption.Key != null)
                     {
                         Key = overrideOption.Key;
                     }
