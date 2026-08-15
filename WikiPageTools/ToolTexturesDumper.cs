@@ -151,7 +151,8 @@ public static class ToolTexturesDumper
                     Attributes = attribs
                 };
 
-                var iconTexture = game.LoadVPKResourceCompiled($"{texturePath}_c");
+                // LoadVPKResourceCompiled appends the _c itself, texturePath is the uncompiled name
+                var iconTexture = game.LoadVPKResourceCompiled(texturePath);
 
                 if (iconTexture == null)
                 {
@@ -160,20 +161,21 @@ public static class ToolTexturesDumper
                     continue;
                 }
 
-                var imgPath = Path.Combine(FGDDumper.EntityPageTools.ToolTextureImageDumpFolder, game.FileSystemName);
-
-                var rootImgPath = Path.Combine(FGDDumper.EntityPageTools.WikiRoot, FGDDumper.EntityPageTools.ToolTextureImageDumpFolder, game.FileSystemName);
-                Directory.CreateDirectory(rootImgPath);
-
                 var textureName = ExtractTextureName(texturePath);
 
-                var finalRootIconPath = $"{Path.Combine(rootImgPath, textureName)}.png";
-                var finalIconPath = $"{Path.Combine(imgPath, textureName)}.png";
-                WikiFilesGenerator.SavePNGFromTextureResource(iconTexture!, finalRootIconPath);
-                Logging.Log($"  Exported tool texture image {textureName} to {finalRootIconPath}`");
+                var pngWikiPath = WikiPaths.Combine(
+                    FGDDumper.EntityPageTools.ToolTextureImageDumpFolder,
+                    game.FileSystemName,
+                    $"{textureName}.png");
+
+                var pngDiskPath = WikiPaths.ToDisk(pngWikiPath);
+                Directory.CreateDirectory(Path.GetDirectoryName(pngDiskPath)!);
+
+                WikiFilesGenerator.SavePNGFromTextureResource(iconTexture, pngDiskPath);
+                Logging.Log($"  Exported tool texture image {textureName} to {pngDiskPath}`");
                 Logging.Log();
 
-                toolMaterial.TexturePath = finalIconPath;
+                toolMaterial.TexturePath = pngWikiPath;
                 returnMaterials.Add(toolMaterial);
             }
 

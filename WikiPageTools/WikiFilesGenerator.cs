@@ -118,21 +118,10 @@ namespace FGDDumper
                         EntityIndexEntry.Games.Add(page.Game.FileSystemName);
                     }
 
-                    if (!string.IsNullOrEmpty(page.IconPath))
+                    var iconUrl = page.GetIconUrl();
+                    if (iconUrl != null)
                     {
-                        if (File.Exists(Path.Combine(EntityPageTools.WikiRoot, page.GetImageRelativePath())))
-                        {
-                            EntityIndexEntry.Icon = page.GetImageRelativePath();
-                        }
-                        else if (File.Exists(Path.Combine(EntityPageTools.WikiRoot, page.IconPath)))
-                        {
-                            EntityIndexEntry.Icon = page.IconPath;
-                        }
-
-                        if (EntityIndexEntry.Icon.StartsWith("static/"))
-                        {
-                            EntityIndexEntry.Icon = EntityIndexEntry.Icon.Remove(0, 6);
-                        }
+                        EntityIndexEntry.Icon = iconUrl;
                     }
 
                     var pagePath = Path.Combine(EntityPageTools.RootPagesFolder, page.GetPageRelativePath());
@@ -157,7 +146,7 @@ namespace FGDDumper
             }
 
             var entityIndexJsonText = JsonSerializer.Serialize(entityIndex, JsonContext.Default.ListEntityIndexEntry);
-            File.WriteAllText(Path.Combine(EntityPageTools.WikiRoot, "static", "fgd_dump", "entityIndex.json"), entityIndexJsonText);
+            File.WriteAllText(WikiPaths.ToDisk(WikiPaths.Combine("static", EntityPageTools.DumpFolder, "entityIndex.json")), entityIndexJsonText);
 
 
             Logging.Log($"\nWrote '{wroteDocs}' document(s), skipped '{skippedDocs}' document(s) with contents that did not change");
@@ -406,6 +395,10 @@ namespace FGDDumper
             Logging.Log();
             Logging.Log(Logging.BannerTitle("Processing entities into JSON and exporting!"));
             Logging.Log();
+
+            // entities share icons a lot, keeps us from decoding and rewriting the same png over and over
+            var extractedIcons = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
             foreach ((string pageName, List<EntityPage> pages) in pagesDictionary)
             {
                 var doc = EntityDocument.GetDocument(pageName, pages);
@@ -425,64 +418,7 @@ namespace FGDDumper
 
                 foreach (var page in doc.Pages)
                 {
-                    if (!string.IsNullOrEmpty(page.IconPath))
-                    {
-                        if (Logging.Verbose)
-                        {
-                            Logging.Log($"\nPage has entity icon path '{page.IconPath}' , attempting to dump icon image:");
-                        }
-                        string iconPath = string.Empty;
-                        if (page.IconPath.Contains("materials/"))
-                        {
-                            iconPath = page.IconPath;
-                        }
-                        else
-                        {
-                            iconPath = $"materials/{page.IconPath}";
-                        }
-
-                        if (!page.IconPath.Contains(".vmat"))
-                        {
-                            iconPath += ".vmat";
-                        }
-
-                        var entityIconVmatResource = page.Game!.LoadVPKResourceCompiled(iconPath);
-
-                        if (entityIconVmatResource?.DataBlock != null)
-                        {
-                            var iconMaterial = (Material)entityIconVmatResource.DataBlock;
-                            var iconTexturePath = GetMaterialColorTexture(iconMaterial);
-
-                            if (string.IsNullOrEmpty(iconTexturePath))
-                            {
-                                throw new InvalidDataException("Failed to get color texture for entity material!");
-                            }
-
-                            var iconTexture = page.Game.LoadVPKResourceCompiled(iconTexturePath);
-
-                            if (Logging.Verbose)
-                            {
-                                Logging.Log($"Read '{iconTexture!.FileName}', extracting:");
-                            }
-
-                            var imgpath = Path.Combine(EntityPageTools.WikiRoot, page.GetImageRelativeFolder());
-                            Directory.CreateDirectory(imgpath);
-                            var imgFilePath = Path.Combine(imgpath, $"{Path.GetFileNameWithoutExtension(page.IconPath)}.png");
-                            SavePNGFromTextureResource(iconTexture!, imgFilePath);
-
-                            if (Logging.Verbose)
-                            {
-                                Logging.Log($"Saved icon texture to '{imgFilePath}'!");
-                            }
-                        }
-                        else
-                        {
-                            if (Logging.Verbose)
-                            {
-                                Logging.Log($"Failed to load entity icon material '{iconPath}'", ConsoleColor.Red);
-                            }
-                        }
-                    }
+                    ExtractPageIcon(page, extractedIcons);
                 }
 
                 var jsonText = JsonSerializer.Serialize(doc, JsonContext.Default.EntityDocument);
@@ -500,32 +436,105 @@ namespace FGDDumper
             Logging.Log($"\nProcessed and exported {pagesDictionary.Count} documents!");
         }
 
+        /// <summary>
+        /// Extracts a page's icon material into a png under the wiki's static folder and rewrites
+        /// <see cref="EntityPage.IconPath"/> into the wiki path of that png. The path is cleared when
+        /// the icon cannot be resolved, since a raw material reference is unusable to the wiki and
+        /// would otherwise leak into page frontmatter as a broken image.
+        /// </summary>
+        private static void ExtractPageIcon(EntityPage page, HashSet<string> extractedIcons)
+        {
+            if (string.IsNullOrEmpty(page.IconPath))
+            {
+                return;
+            }
+
+            if (Logging.Verbose)
+            {
+                Logging.Log($"\nPage has entity icon path '{page.IconPath}' , attempting to dump icon image:");
+            }
+
+            var materialPath = GetIconMaterialPath(page.IconPath);
+            var pngWikiPath = EntityPage.GetIconPngPath(page.Game!, page.IconPath);
+
+            if (extractedIcons.Contains(pngWikiPath))
+            {
+                page.IconPath = pngWikiPath;
+                return;
+            }
+
+            page.IconPath = string.Empty;
+
+            if (page.Game!.LoadVPKResourceCompiled(materialPath)?.DataBlock is not Material iconMaterial)
+            {
+                if (Logging.Verbose)
+                {
+                    Logging.Log($"Failed to load entity icon material '{materialPath}'", ConsoleColor.Red);
+                }
+                return;
+            }
+
+            var iconTexturePath = GetMaterialColorTexture(iconMaterial);
+
+            if (string.IsNullOrEmpty(iconTexturePath))
+            {
+                Logging.Log($"Entity icon material '{materialPath}' has no color texture, skipping icon.", ConsoleColor.Red);
+                return;
+            }
+
+            var iconTexture = page.Game.LoadVPKResourceCompiled(iconTexturePath);
+
+            if (iconTexture is null)
+            {
+                Logging.Log($"Failed to load entity icon texture '{iconTexturePath}', skipping icon.", ConsoleColor.Red);
+                return;
+            }
+
+            var pngDiskPath = WikiPaths.ToDisk(pngWikiPath);
+            Directory.CreateDirectory(Path.GetDirectoryName(pngDiskPath)!);
+            SavePNGFromTextureResource(iconTexture, pngDiskPath);
+
+            extractedIcons.Add(pngWikiPath);
+            page.IconPath = pngWikiPath;
+
+            if (Logging.Verbose)
+            {
+                Logging.Log($"Saved icon texture to '{pngDiskPath}'!");
+            }
+        }
+
+        // icon references out of an FGD range from 'editor/foo' to 'materials/editor/foo.vmat',
+        // and source 1 leftovers still point at a .vmt
+        private static string GetIconMaterialPath(string iconPath)
+        {
+            var materialPath = iconPath.Replace('\\', '/');
+
+            if (!materialPath.StartsWith("materials/", StringComparison.OrdinalIgnoreCase))
+            {
+                materialPath = $"materials/{materialPath}";
+            }
+
+            if (!materialPath.EndsWith(".vmat", StringComparison.OrdinalIgnoreCase))
+            {
+                materialPath = $"{Path.ChangeExtension(materialPath, null)}.vmat";
+            }
+
+            return materialPath;
+        }
+
+        private static readonly string[] ColorTextureParams = ["g_tColor", "g_tColorA", "g_tColorB", "g_tColorC"];
+
         private static string? GetMaterialColorTexture(Material material)
         {
-            foreach (var textureParam in material.TextureParams)
+            foreach (var colorParam in ColorTextureParams)
             {
-                if (textureParam.Key == "g_tColor")
+                if (material.TextureParams.TryGetValue(colorParam, out var texturePath))
                 {
-                    return textureParam.Value;
-                }
-
-                if (textureParam.Key == "g_tColorA")
-                {
-                    return textureParam.Value;
-                }
-
-                if (textureParam.Key == "g_tColorB")
-                {
-                    return textureParam.Value;
-                }
-
-                if (textureParam.Key == "g_tColorC")
-                {
-                    return textureParam.Value;
+                    return texturePath;
                 }
             }
 
-            return string.Empty;
+            return null;
         }
 
         private static bool WriteFileIfContentsChanged(string path, string? contents)
@@ -599,7 +608,9 @@ namespace FGDDumper
             using var bitmap = textureExtract.Bitmap;
             using var data = bitmap.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
 
-            using var stream = File.OpenWrite(pathToSaveTo);
+            // File.Create and not OpenWrite, the latter does not truncate and would leave the tail
+            // of a larger existing png behind
+            using var stream = File.Create(pathToSaveTo);
             data.SaveTo(stream);
         }
 

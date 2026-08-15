@@ -91,15 +91,10 @@ namespace FGDDumper
 
 
             string iconText = string.Empty;
-            if (!string.IsNullOrEmpty(IconPath))
+            var iconUrl = GetIconUrl();
+            if (iconUrl != null)
             {
-                var textureImagePath = IconPath;
-
-                if (File.Exists(Path.Combine(EntityPageTools.WikiRoot, textureImagePath)))
-                {
-                    iconText = $"<img src={{\"/{textureImagePath.Replace("static/", "")}\"}} alt=\"{Name} icon\" style={{{{height: '80px'}}}} />\n";
-                }
-
+                iconText = $"<img src={{\"{iconUrl}\"}} alt=\"{Name} icon\" style={{{{height: '80px'}}}} />\n";
             }
 
             var MD =
@@ -436,14 +431,29 @@ namespace FGDDumper
             }
         }
 
-        public string GetImageRelativeFolder()
+        /// <summary>Wiki folder the extracted entity icons of a game go into.</summary>
+        public static string GetIconFolder(Game game)
         {
-            return $"static/{EntityPageTools.DumpFolder}/img/{Game!.FileSystemName}";
+            return WikiPaths.Combine("static", EntityPageTools.DumpFolder, "img", game.FileSystemName);
         }
 
-        public string GetImageRelativePath()
+        /// <summary>
+        /// Wiki path of the png extracted for an icon material. Named after the material rather than
+        /// the entity, so the entities sharing an icon share one file instead of writing a copy each.
+        /// </summary>
+        public static string GetIconPngPath(Game game, string iconMaterialPath)
         {
-            return $"{GetImageRelativeFolder()}/{Name}.png";
+            return WikiPaths.Combine(GetIconFolder(game), $"{Path.GetFileNameWithoutExtension(iconMaterialPath)}.png");
+        }
+
+        /// <summary>
+        /// Site URL of this page's icon, or null when there is no icon file on disk. <see cref="IconPath"/>
+        /// is a wiki path once the dump has extracted it, and it is the only thing worth rendering,
+        /// an unresolved material reference from the FGD is of no use to the wiki.
+        /// </summary>
+        public string? GetIconUrl()
+        {
+            return WikiPaths.Exists(IconPath) ? WikiPaths.ToUrl(IconPath) : null;
         }
 
         public string GetPageRelativePath()

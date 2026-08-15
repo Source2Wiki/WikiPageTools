@@ -51,9 +51,10 @@ namespace FGDDumper
                     BestDescription = page.Description;
                 }
 
-                if (page.IconPath.Length > BestIcon.Length)
+                // any game's icon will do, they are near always the same image
+                if (string.IsNullOrEmpty(BestIcon))
                 {
-                    BestIcon = page.IconPath;
+                    BestIcon = page.GetIconUrl() ?? string.Empty;
                 }
             }
 
@@ -61,7 +62,7 @@ namespace FGDDumper
 
             if (!string.IsNullOrEmpty(BestIcon))
             {
-                imageString = $"image: {BestIcon.Replace("static/", "/")}";
+                imageString = $"image: {BestIcon}";
             }
 
             var MD =
