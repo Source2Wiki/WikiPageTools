@@ -10,7 +10,7 @@ namespace FGDDumper
 {
     public static class EntityPageTools
     {
-        private const string Version = "2.0.0";
+        private const string Version = "2.0.1";
 
         public static string WikiRoot { get; private set; } = string.Empty;
 
@@ -51,7 +51,6 @@ namespace FGDDumper
         /// <param name="dump_fgd">Attempts to find all source2 games on the system and generate json dumps of their FGDs,
         /// the dumps get saved into \fgd_dump, which is what the wiki generates its entity pages from.</param>
         /// <param name="verbose">Enables extra logging which might otherwise be too annoying.</param>
-        /// <param name="cs_script_tablegen">converts point_script.d.ts into an mdx table</param>
         /// <param name="entity_list_to_json">converts a console var/command dump from the `cvarlist` command into a json file</param>
         /// <param name="game">converts a console var/command dump from the `cvarlist` command into a json file</param>
         /// <param name="dump_tool_tex">Dumps tool textures for all games as json,
@@ -61,24 +60,9 @@ namespace FGDDumper
             bool verbose,
             bool dump_tool_tex,
             string? game = "",
-            string? entity_list_to_json = "",
-            string? cs_script_tablegen = ""
+            string? entity_list_to_json = ""
             )
         {
-            //parser built by clanker because im lazy
-            if (!string.IsNullOrEmpty(cs_script_tablegen))
-            {
-                var parsed = CSScriptTSParser.ParseScriptFile(cs_script_tablegen);
-                if (!parsed)
-                {
-                    return 1;
-                }
-
-                Logging.Log("Done! ");
-
-                return 0;
-            }
-
             if (string.IsNullOrEmpty(root))
             {
                 Logging.Log("Docs output path can't be empty");
