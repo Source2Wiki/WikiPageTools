@@ -4,22 +4,15 @@ using System.Runtime.InteropServices;
 using System.Text;
 using ConsoleAppFramework;
 using EntityPageTools;
-using FileWatcherEx;
 using WikiPageTools;
 
 namespace FGDDumper
 {
     public static class EntityPageTools
     {
-        private const string Version = "1.3.5";
+        private const string Version = "2.0.0";
 
         public static string WikiRoot { get; private set; } = string.Empty;
-
-        public const string DocsFolder = "docs/Entities";
-        public static string RootDocsFolder { get; private set; } = string.Empty;
-
-        public const string PagesFolder = "src/pages/Entities";
-        public static string RootPagesFolder { get; private set; } = string.Empty;
 
         public const string DumpFolder = "fgd_dump";
         public static string RootDumpFolder { get; private set; } = string.Empty;
@@ -28,9 +21,6 @@ namespace FGDDumper
 
         public const string ToolTextureDumpFolder = "tooltex_dump";
         public const string ToolTextureImageDumpFolder = "static/tooltex_dump/img";
-
-        public const string OverridesFolder = "fgd_dump_overrides";
-        public static string RootOverridesFolder { get; private set; } = string.Empty;
 
         public static void Main(string[] args)
         {
@@ -53,25 +43,22 @@ namespace FGDDumper
         }
 
         /// <summary>
-        /// An automatic entity documentation page generator for the Source2 Wiki.
+        /// Dumps game data into the JSON the Source2 Wiki builds its pages out of. Reading the FGDs
+        /// and unpacking icons needs the games installed, which is why the dumps are checked into
+        /// the wiki. Turning them into pages is the wiki's own job and lives in its \tools folder.
         /// </summary>
         /// <param name="root">Folder path for the root of the docusaurus project.</param>
-        /// <param name="generate_mdx">Generates the wiki files from the json in \fgd_dump, takes into account the manual overrides from \fgd_dump_overrides.</param>
-        /// <param name="dump_fgd">Attempts to find all source2 games on the system and generate json dumps of their FGDs, 
-        /// the dumps get saved into \fgd_dump, you usually want to run this program with --generate_mdx after
-        /// to generate the actual wiki pages.</param>
+        /// <param name="dump_fgd">Attempts to find all source2 games on the system and generate json dumps of their FGDs,
+        /// the dumps get saved into \fgd_dump, which is what the wiki generates its entity pages from.</param>
         /// <param name="verbose">Enables extra logging which might otherwise be too annoying.</param>
-        /// <param name="no_listen">Disables listening for file changes after generate_mdx and quits after first generation.</param>
         /// <param name="cs_script_tablegen">converts point_script.d.ts into an mdx table</param>
         /// <param name="entity_list_to_json">converts a console var/command dump from the `cvarlist` command into a json file</param>
         /// <param name="game">converts a console var/command dump from the `cvarlist` command into a json file</param>
-        /// <param name="dump_tool_tex">Dumps tool textures for all games as json, 
+        /// <param name="dump_tool_tex">Dumps tool textures for all games as json,
         public static int Run(
             string root,
-            bool generate_mdx,
             bool dump_fgd,
             bool verbose,
-            bool no_listen,
             bool dump_tool_tex,
             string? game = "",
             string? entity_list_to_json = "",
@@ -110,7 +97,7 @@ namespace FGDDumper
                 return 1;
             }
 
-            if (!dump_fgd && !generate_mdx && !dump_tool_tex && string.IsNullOrEmpty(entity_list_to_json))
+            if (!dump_fgd && !dump_tool_tex && string.IsNullOrEmpty(entity_list_to_json))
             {
                 Logging.Log("At least one mode argument must be provided!");
                 return 1;
@@ -123,10 +110,7 @@ namespace FGDDumper
 
             WikiRoot = root;
 
-            RootDocsFolder = Path.Combine(WikiRoot, DocsFolder);
-            RootPagesFolder = Path.Combine(WikiRoot, PagesFolder);
             RootDumpFolder = Path.Combine(WikiRoot, DumpFolder);
-            RootOverridesFolder = Path.Combine(WikiRoot, OverridesFolder);
 
             Logging.Log($"Wiki Page Tools, Version {Version}.");
             Logging.Log("Starting...");
@@ -163,35 +147,7 @@ namespace FGDDumper
 
             if (dump_fgd)
             {
-                WikiFilesGenerator.DumpFGD();
-            }
-
-            if (generate_mdx)
-            {
-                try
-                {
-                    WikiFilesGenerator.GenerateMDXFromJSONDump();
-                }
-                catch (Exception ex)
-                {
-                    Logging.Log($"\nFailed to update MDX files, error: \n{ex.Message}");
-                }
-
-                if (!no_listen)
-                {
-                    var fileWatcher = new FileSystemWatcherEx(RootOverridesFolder);
-
-                    Logging.Log($"\nWatching for file changes in '{Path.Combine(RootOverridesFolder)}'");
-                    fileWatcher.OnChanged += UpdateMDX;
-                    fileWatcher.OnCreated += UpdateMDX;
-                    fileWatcher.OnRenamed += UpdateMDX;
-
-                    fileWatcher.Start();
-
-                    while (Console.ReadKey().KeyChar != 'q')
-                    {
-                    }
-                }
+                GameDataDumper.DumpFGD();
             }
 
             if (dump_tool_tex)
@@ -201,21 +157,5 @@ namespace FGDDumper
 
             return 0;
         }
-
-        private static void UpdateMDX(object? sender, FileChangedEvent e)
-        {
-            Logging.Log($"\nFile '{e.FullPath}' changed, updating MDX.");
-            try
-            {
-                WikiFilesGenerator.GenerateMDXFromJSONDump();
-                Logging.Log($"\nWatching for file changes in '{Path.Combine(RootOverridesFolder)}'");
-            }
-            catch (Exception ex)
-            {
-                Logging.Log($"\nFailed to live update {e.FullPath}, error: \n{ex.Message}");
-            }
-        }
     }
 }
-
-

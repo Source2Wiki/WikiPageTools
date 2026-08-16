@@ -59,15 +59,15 @@ public static class ConvarListToJson
 
             for (int i = 0; i < flags.Count(); i++)
             {
-                flags[i] = WikiFilesGenerator.SanitizeInputTable(flags[i].Trim());
+                flags[i] = GameDataDumper.SanitizeInputTable(flags[i].Trim());
             }
 
             var conEntry = new ConEntry
             {
-                Name = WikiFilesGenerator.SanitizeInputTable(splitLine[0].Trim()),
-                DefaultValue = WikiFilesGenerator.SanitizeInputTable(splitLine[1].Trim()),
+                Name = GameDataDumper.SanitizeInputTable(splitLine[0].Trim()),
+                DefaultValue = GameDataDumper.SanitizeInputTable(splitLine[1].Trim()),
                 flags = flags,
-                Description = WikiFilesGenerator.SanitizeInputTable(splitLine[3].Trim())
+                Description = GameDataDumper.SanitizeInputTable(splitLine[3].Trim())
             };
 
             if (whitelistKV3 != null && whitelistKV3.Root.GetArray<string>("whitelist_cvars").Contains(conEntry.Name))

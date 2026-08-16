@@ -171,7 +171,7 @@ public static class ToolTexturesDumper
                 var pngDiskPath = WikiPaths.ToDisk(pngWikiPath);
                 Directory.CreateDirectory(Path.GetDirectoryName(pngDiskPath)!);
 
-                WikiFilesGenerator.SavePNGFromTextureResource(iconTexture, pngDiskPath);
+                GameDataDumper.SavePNGFromTextureResource(iconTexture, pngDiskPath);
                 Logging.Log($"  Exported tool texture image {textureName} to {pngDiskPath}`");
                 Logging.Log();
 

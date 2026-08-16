@@ -13,7 +13,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="FileWatcherEx" Version="2.6.0" />
     <PackageReference Include="System.Text.Json" Version="9.0.6" />
     <PackageReference Include="ValveResourceFormat" Version="19.2.6339" />
   </ItemGroup>
