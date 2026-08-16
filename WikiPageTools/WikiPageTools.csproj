@@ -15,6 +15,13 @@
     </PackageReference>
     <PackageReference Include="System.Text.Json" Version="9.0.6" />
     <PackageReference Include="ValveResourceFormat" Version="19.2.6339" />
+    <PackageReference Include="ValveResourceFormat.Renderer" Version="19.2.6339" />
+    <PackageReference Include="OpenTK" Version="4.9.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- lights the rendered model icons, this is the cubemap Source2Viewer lights its thumbnails with -->
+    <EmbeddedResource Include="industrial_sunset_puresky.vtex_c" />
   </ItemGroup>
 
   <ItemGroup>

@@ -86,6 +86,17 @@ namespace FGDDumper
 
             }
 
+            /// <summary>
+            /// A loader for this game's files. It walks up to gameinfo.gi itself, so the one loader
+            /// resolves across every search path the game declares.
+            /// </summary>
+            public GameFileLoader? GetFileLoader()
+            {
+                CacheVPKContent();
+
+                return GameFileLoaders.FirstOrDefault();
+            }
+
             public Stream? LoadVPKFile(string filePath)
             {
                 CacheVPKContent();

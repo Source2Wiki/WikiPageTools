@@ -1,10 +1,19 @@
 using System.Text;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace EntityPageTools
 {
     static class Logging
     {
         public static bool Verbose = true;
+
+        /// <summary>
+        /// The renderer wants an ILogger. It is chatty about shaders and none of it belongs in a
+        /// dump log, so it goes nowhere unless something actually fails, which surfaces as an
+        /// exception instead.
+        /// </summary>
+        public static ILogger RendererLogger { get; } = NullLogger.Instance;
 
         private const char BannerChar = '-';
 

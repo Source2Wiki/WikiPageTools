@@ -18,6 +18,12 @@ namespace FGDDumper
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string IconPath { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Model the FGD names for this entity, rendered into its icon. Dump side only, the JSON
+        /// converter does not write it, the wiki only ever sees the resulting IconPath.
+        /// </summary>
+        public string ModelPath { get; set; } = string.Empty;
         public bool NonFGD { get; set; } = false;
         public bool Legacy { get; set; } = false;
         public List<Property> Properties { get; set; } = [];
@@ -113,15 +119,25 @@ namespace FGDDumper
             }
 
             string iconPath = string.Empty;
+            string modelPath = string.Empty;
 
             foreach (var behavior in Class.Behaviours)
             {
+                if (behavior.Values.Count == 0)
+                {
+                    continue;
+                }
+
                 if (behavior.Name == "iconsprite")
                 {
-                    if (behavior.Values.Count > 0)
-                    {
-                        iconPath = behavior.Values[0];
-                    }
+                    iconPath = behavior.Values[0];
+                }
+
+                // a model to render into an icon. editormodel is what hammer itself draws for the
+                // entity, so it is the truest picture of it, and it may sit next to an iconsprite
+                if (behavior.Name == "studio" || behavior.Name == "studioprop" || behavior.Name == "model" || behavior.Name == "editormodel")
+                {
+                    modelPath = behavior.Values[0];
                 }
             }
 
@@ -155,6 +171,7 @@ namespace FGDDumper
                 Name = Class.Name,
                 Description = Class.Description,
                 IconPath = iconPath,
+                ModelPath = modelPath,
                 EntityType = entityType
             };
 

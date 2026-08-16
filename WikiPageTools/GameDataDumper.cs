@@ -133,6 +133,13 @@ namespace FGDDumper
             // entities share icons a lot, keeps us from decoding and rewriting the same png over and over
             var extractedIcons = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+            foreach (var page in pagesDictionary.Values.SelectMany(pages => pages))
+            {
+                ExtractPageIcon(page, extractedIcons);
+            }
+
+            RenderModelIcons(pagesDictionary, dumpedGames, extractedIcons);
+
             foreach ((string pageName, List<EntityPage> pages) in pagesDictionary)
             {
                 var doc = EntityDocument.GetDocument(pageName, pages);
@@ -149,11 +156,6 @@ namespace FGDDumper
 
                 Directory.CreateDirectory(EntityPageTools.RootDumpFolder);
                 var docPath = Path.Combine(EntityPageTools.RootDumpFolder, $"{doc.Name}.json");
-
-                foreach (var page in doc.Pages)
-                {
-                    ExtractPageIcon(page, extractedIcons);
-                }
 
                 var jsonText = JsonSerializer.Serialize(doc, JsonContext.Default.EntityDocument);
                 File.WriteAllText(docPath, jsonText);
@@ -187,6 +189,115 @@ namespace FGDDumper
         /// the icon cannot be resolved, since a raw material reference is unusable to the wiki and
         /// would otherwise leak into page frontmatter as a broken image.
         /// </summary>
+        /// <summary>
+        /// Renders an icon for every entity that names a model. Done a game at a time, because
+        /// standing up an OpenGL context and loading the renderer's shaders is the expensive part
+        /// and one context serves all of that game's models.
+        ///
+        /// A model wins over an icon material when an entity has both: the model is what hammer
+        /// draws for it, the sprite is a fallback for when hammer cannot. The material icon is
+        /// still extracted first, so an entity whose model cannot be loaded or rendered keeps it.
+        /// </summary>
+        private static void RenderModelIcons(Dictionary<string, List<EntityPage>> pagesDictionary, List<GameFinder.Game> games, HashSet<string> extractedIcons)
+        {
+            var pending = pagesDictionary.Values
+                .SelectMany(pages => pages)
+                .Where(page => !string.IsNullOrEmpty(page.ModelPath))
+                .ToList();
+
+            if (pending.Count == 0)
+            {
+                return;
+            }
+
+            Logging.Log();
+            Logging.Log(Logging.BannerTitle("Rendering icons for entities that name a model"));
+            Logging.Log();
+
+            var rendered = 0;
+
+            foreach (var game in games)
+            {
+                var forThisGame = pending.Where(page => page.Game == game).ToList();
+
+                if (forThisGame.Count == 0)
+                {
+                    continue;
+                }
+
+                var fileLoader = game.GetFileLoader();
+
+                if (fileLoader == null)
+                {
+                    continue;
+                }
+
+                using var renderer = ModelIconRenderer.TryCreate(fileLoader);
+
+                if (renderer == null)
+                {
+                    // no OpenGL context on this machine, and that will not change for the next game
+                    return;
+                }
+
+                foreach (var page in forThisGame)
+                {
+                    rendered += RenderModelIcon(renderer, page, extractedIcons) ? 1 : 0;
+                }
+            }
+
+            var withIcon = pending.Count(page => !string.IsNullOrEmpty(page.IconPath));
+
+            // rendered counts pngs written, several entities can share one, so the second number
+            // is what actually matters to the wiki
+            Logging.Log($"\nRendered {rendered} model png(s), {withIcon} of {pending.Count} entities that name a model have an icon");
+        }
+
+        private static bool RenderModelIcon(ModelIconRenderer renderer, EntityPage page, HashSet<string> extractedIcons)
+        {
+            var modelPath = GetModelResourcePath(page.ModelPath);
+            var pngWikiPath = EntityPage.GetIconPngPath(page.Game!, modelPath);
+
+            // several entities point at the same model, and it only has to be drawn once
+            if (extractedIcons.Contains(pngWikiPath))
+            {
+                page.IconPath = pngWikiPath;
+                return false;
+            }
+
+            var model = page.Game!.LoadVPKResourceCompiled(modelPath);
+
+            if (model == null)
+            {
+                Logging.Log($"Could not load model '{modelPath}' for '{page.Name}'", ConsoleColor.Red);
+                return false;
+            }
+
+            try
+            {
+                if (!renderer.TryRenderToFile(model, WikiPaths.ToDisk(pngWikiPath)))
+                {
+                    Logging.Log($"Model '{page.ModelPath}' for '{page.Name}' has nothing to draw", ConsoleColor.Red);
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Log($"Failed to render '{page.ModelPath}' for '{page.Name}': {ex.Message}", ConsoleColor.Red);
+                return false;
+            }
+
+            extractedIcons.Add(pngWikiPath);
+            page.IconPath = pngWikiPath;
+
+            if (Logging.Verbose)
+            {
+                Logging.Log($"Rendered icon for '{page.Name}' from '{page.ModelPath}'");
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Deletes the pngs of icons this dump did not produce. An entity or a material that goes
         /// away upstream would otherwise leave its image behind for good, and these are committed
@@ -283,6 +394,22 @@ namespace FGDDumper
             {
                 Logging.Log($"Saved icon texture to '{pngDiskPath}'!");
             }
+        }
+
+        /// <summary>
+        /// The compiled model an FGD reference means. They come as 'models/foo', 'models/foo.vmdl'
+        /// and, left over from source 1, 'models/foo.mdl' — on disk it is always the .vmdl.
+        /// </summary>
+        private static string GetModelResourcePath(string modelPath)
+        {
+            var path = modelPath.Replace('\\', '/');
+
+            if (!path.EndsWith(".vmdl", StringComparison.OrdinalIgnoreCase))
+            {
+                path = $"{Path.ChangeExtension(path, null)}.vmdl";
+            }
+
+            return path;
         }
 
         // icon references out of an FGD range from 'editor/foo' to 'materials/editor/foo.vmat',
