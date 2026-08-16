@@ -46,6 +46,9 @@ namespace FGDDumper
 
             Logging.Log(Logging.BannerTitle(string.Empty, 100));
 
+            // only the games we actually read may have their icons cleaned up afterwards
+            var dumpedGames = new List<GameFinder.Game>();
+
             foreach (GameFinder.Game game in gamesList)
             {
                 Logging.Log();
@@ -60,6 +63,8 @@ namespace FGDDumper
                     Logging.Log();
                     continue;
                 }
+
+                dumpedGames.Add(game);
 
                 Logging.Log("Caching VPK content for game");
                 game.CacheVPKContent();
@@ -159,6 +164,17 @@ namespace FGDDumper
                 }
             }
 
+            var removedIcons = 0;
+            foreach (var game in dumpedGames)
+            {
+                removedIcons += RemoveStaleIcons(game, extractedIcons);
+            }
+
+            if (removedIcons > 0)
+            {
+                Logging.Log($"\nRemoved {removedIcons} icon(s) that nothing references any more");
+            }
+
             var timestamp = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
             File.WriteAllText(Path.Combine(EntityPageTools.RootDumpFolder, "timestamp.json"), timestamp.ToString(CultureInfo.InvariantCulture));
 
@@ -171,6 +187,43 @@ namespace FGDDumper
         /// the icon cannot be resolved, since a raw material reference is unusable to the wiki and
         /// would otherwise leak into page frontmatter as a broken image.
         /// </summary>
+        /// <summary>
+        /// Deletes the pngs of icons this dump did not produce. An entity or a material that goes
+        /// away upstream would otherwise leave its image behind for good, and these are committed
+        /// to the wiki. Only games that were actually read are touched, so running with a game
+        /// uninstalled never throws away its icons.
+        /// </summary>
+        private static int RemoveStaleIcons(GameFinder.Game game, HashSet<string> extractedIcons)
+        {
+            var iconFolder = EntityPage.GetIconFolder(game);
+            var folder = WikiPaths.ToDisk(iconFolder);
+
+            if (!Directory.Exists(folder))
+            {
+                return 0;
+            }
+
+            var removed = 0;
+
+            foreach (var file in Directory.GetFiles(folder, "*.png"))
+            {
+                if (extractedIcons.Contains(WikiPaths.Combine(iconFolder, Path.GetFileName(file))))
+                {
+                    continue;
+                }
+
+                File.Delete(file);
+                removed++;
+
+                if (Logging.Verbose)
+                {
+                    Logging.Log($"Removed stale icon '{file}'");
+                }
+            }
+
+            return removed;
+        }
+
         private static void ExtractPageIcon(EntityPage page, HashSet<string> extractedIcons)
         {
             if (string.IsNullOrEmpty(page.IconPath))

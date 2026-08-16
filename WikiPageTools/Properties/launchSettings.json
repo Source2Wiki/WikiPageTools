@@ -2,7 +2,7 @@
   "profiles": {
     "WikiPageTools": {
       "commandName": "Project",
-      "commandLineArgs": "--root \"E:/Dev/Source2Wiki\" --dump_tool_tex"
+      "commandLineArgs": "--root \"E:/Dev/Source2Wiki\" --dump_fgd"
     }
   }
 }
