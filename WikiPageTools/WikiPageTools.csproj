@@ -14,8 +14,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="System.Text.Json" Version="9.0.6" />
-    <PackageReference Include="ValveResourceFormat" Version="19.2.6339" />
-    <PackageReference Include="ValveResourceFormat.Renderer" Version="19.2.6339" />
+    <PackageReference Include="ValveResourceFormat" Version="20.0.6980" />
+    <PackageReference Include="ValveResourceFormat.Renderer" Version="20.0.6980" />
     <PackageReference Include="OpenTK" Version="4.9.4" />
   </ItemGroup>
 

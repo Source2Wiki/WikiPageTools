@@ -11,6 +11,7 @@ using ValveResourceFormat.Renderer;
 using ValveResourceFormat.Renderer.SceneEnvironment;
 using ValveResourceFormat.Renderer.SceneNodes;
 using ValveResourceFormat.ResourceTypes;
+using ValveResourceFormat.CompiledShader;
 
 namespace FGDDumper
 {
@@ -33,9 +34,8 @@ namespace FGDDumper
         // anything at or below this is background bleed, not the model
         private const byte AlphaFloor = 8;
 
-        // the view Source2Viewer opens a model on, so icons read the way the tools show them
         private static readonly float CameraYaw = float.DegreesToRadians(225f);
-        private static readonly float CameraPitch = float.DegreesToRadians(-20f);
+        private static readonly float CameraPitch = float.DegreesToRadians(20f);
 
         private readonly NativeWindow window;
         private readonly RendererContext rendererContext;
@@ -82,7 +82,7 @@ namespace FGDDumper
                 window.MakeCurrent();
 
                 GLEnvironment.Initialize(rendererContext.Logger);
-                GLEnvironment.SetDefaultRenderState();
+                GLEnvironment.SetDefaultRenderState(rendererContext);
 
                 var renderer = new Renderer(rendererContext);
 
@@ -92,8 +92,7 @@ namespace FGDDumper
                 renderer.Postprocess.Load(4);
 
                 var framebuffer = Framebuffer.Prepare("IconFramebuffer", RenderSize, RenderSize, 4,
-                    new(PixelInternalFormat.Rgba16f, PixelFormat.Rgba, PixelType.HalfFloat),
-                    Framebuffer.DepthAttachmentFormat.Depth16);
+                    ImageFormat.RGBA16161616F, ImageFormat.D16);
                 framebuffer.Initialize();
 
                 renderer.Initialize();
@@ -219,8 +218,7 @@ namespace FGDDumper
 
         private static Framebuffer CreateSaveBuffer()
         {
-            var buffer = Framebuffer.Prepare("IconSaveBuffer", RenderSize, RenderSize, 0,
-                new(PixelInternalFormat.Rgba8, PixelFormat.Bgra, PixelType.UnsignedByte), null);
+            var buffer = Framebuffer.Prepare("IconSaveBuffer", RenderSize, RenderSize, 0, ImageFormat.RGBA8888, null);
 
             buffer.ClearColor = new OpenTK.Mathematics.Color4(0, 0, 0, 0);
             buffer.Initialize();
