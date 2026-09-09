@@ -4,9 +4,9 @@ using static FGDDumper.GameFinder;
 namespace FGDDumper
 {
     /// <summary>
-    /// One entity as it exists in one game, and the shape it takes in \fgd_dump.
+    /// One entity as it exists in one game, and the shape it takes in \dump\fgd.
     ///
-    /// This is a dump format, not a page: turning it into MDX, and merging \fgd_dump_overrides
+    /// This is a dump format, not a page: turning it into MDX, and merging \dump\fgd_overrides
     /// on top of it, is the wiki's job and lives in its \tools\entity-pages. Fields the dumper
     /// never fills in (annotations, the legacy and non FGD flags) are still part of the model,
     /// they are what an override file is allowed to set.
@@ -92,7 +92,7 @@ namespace FGDDumper
         /// <summary>Wiki folder the extracted entity icons of a game go into.</summary>
         public static string GetIconFolder(Game game)
         {
-            return WikiPaths.Combine("static", EntityPageTools.DumpFolder, "img", game.FileSystemName);
+            return WikiPaths.Combine(EntityPageTools.IconDumpFolder, game.FileSystemName);
         }
 
         /// <summary>

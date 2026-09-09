@@ -1,7 +1,7 @@
 namespace FGDDumper
 {
     /// <summary>
-    /// Every game's version of one entity, which is what a single file in \fgd_dump holds.
+    /// Every game's version of one entity, which is what a single file in \dump\fgd holds.
     /// The wiki turns this into the tabbed page a reader sees.
     /// </summary>
     public class EntityDocument

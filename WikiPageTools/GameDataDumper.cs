@@ -13,7 +13,7 @@ using ValveResourceFormat.ResourceTypes;
 namespace FGDDumper
 {
     /// <summary>
-    /// Reads every installed game's FGD into the JSON under \fgd_dump, unpacking the entity icons
+    /// Reads every installed game's FGD into the JSON under \dump\fgd, unpacking the entity icons
     /// they reference out of the VPKs along the way. The wiki generates its pages from that JSON,
     /// so this only has to run when a game updates.
     /// </summary>

@@ -10,16 +10,18 @@ namespace FGDDumper
 {
     public static class EntityPageTools
     {
-        private const string Version = "2.1.1";
+        private const string Version = "2.2.0";
 
         public static string WikiRoot { get; private set; } = string.Empty;
 
-        public const string DumpFolder = "fgd_dump";
+        public const string DumpFolder = "dump/fgd";
+        /// <summary>Where the entity icons go under static, served by the wiki from the site root as /fgd_dump.</summary>
+        public const string IconDumpFolder = "static/fgd_dump/img";
         public static string RootDumpFolder { get; private set; } = string.Empty;
 
-        public const string ConDumpFolder = "con_dump";
+        public const string ConDumpFolder = "dump/convars";
 
-        public const string ToolTextureDumpFolder = "tooltex_dump";
+        public const string ToolTextureDumpFolder = "dump/tooltex";
         public const string ToolTextureImageDumpFolder = "static/tooltex_dump/img";
 
         public static void Main(string[] args)
@@ -49,7 +51,7 @@ namespace FGDDumper
         /// </summary>
         /// <param name="root">Folder path for the root of the docusaurus project.</param>
         /// <param name="dump_fgd">Attempts to find all source2 games on the system and generate json dumps of their FGDs,
-        /// the dumps get saved into \fgd_dump, which is what the wiki generates its entity pages from.</param>
+        /// the dumps get saved into \dump\fgd, which is what the wiki generates its entity pages from.</param>
         /// <param name="verbose">Enables extra logging which might otherwise be too annoying.</param>
         /// <param name="entity_list_to_json">converts a console var/command dump from the `cvarlist` command into a json file</param>
         /// <param name="game">converts a console var/command dump from the `cvarlist` command into a json file</param>
