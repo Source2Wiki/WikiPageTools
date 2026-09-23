@@ -53,16 +53,16 @@ namespace FGDDumper
         /// <param name="dump_fgd">Attempts to find all source2 games on the system and generate json dumps of their FGDs,
         /// the dumps get saved into \dump\fgd, which is what the wiki generates its entity pages from.</param>
         /// <param name="verbose">Enables extra logging which might otherwise be too annoying.</param>
-        /// <param name="entity_list_to_json">converts a console var/command dump from the `cvarlist` command into a json file</param>
-        /// <param name="game">converts a console var/command dump from the `cvarlist` command into a json file</param>
-        /// <param name="dump_tool_tex">Dumps tool textures for all games as json,
+        /// <param name="convar_list_to_json">Path to a console var/command dump from the `cvarlist` command, converted into \dump\convars\condump_[game].json.</param>
+        /// <param name="game">The game the `cvarlist` dump comes from, needed by --convar_list_to_json.</param>
+        /// <param name="dump_tool_tex">Dumps tool textures for all games as json.</param>
         public static int Run(
             string root,
             bool dump_fgd,
             bool verbose,
             bool dump_tool_tex,
             string? game = "",
-            string? entity_list_to_json = ""
+            string? convar_list_to_json = ""
             )
         {
             if (string.IsNullOrEmpty(root))
@@ -83,7 +83,7 @@ namespace FGDDumper
                 return 1;
             }
 
-            if (!dump_fgd && !dump_tool_tex && string.IsNullOrEmpty(entity_list_to_json))
+            if (!dump_fgd && !dump_tool_tex && string.IsNullOrEmpty(convar_list_to_json))
             {
                 Logging.Log("At least one mode argument must be provided!");
                 return 1;
@@ -101,11 +101,11 @@ namespace FGDDumper
             Logging.Log($"Wiki Page Tools, Version {Version}.");
             Logging.Log("Starting...");
 
-            if (!string.IsNullOrEmpty(entity_list_to_json))
+            if (!string.IsNullOrEmpty(convar_list_to_json))
             {
                 if (string.IsNullOrEmpty(game))
                 {
-                    Logging.Log("--entity_list_to_json needs `--game` param", ConsoleColor.Red);
+                    Logging.Log("--convar_list_to_json needs `--game` param", ConsoleColor.Red);
                     Logging.Log(GameFinder.GetValidGames());
                     return 1;
                 }
@@ -119,7 +119,7 @@ namespace FGDDumper
                     return 1;
                 }
 
-                var json = ConvarListToJson.ToJson(entity_list_to_json, gameClass);
+                var json = ConvarListToJson.ToJson(convar_list_to_json, gameClass);
                 var path = Path.Combine(WikiRoot, ConDumpFolder);
                 var file = $"condump_{gameClass.FileSystemName}.json";
                 Directory.CreateDirectory(path);
