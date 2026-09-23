@@ -16,13 +16,16 @@
         Decal,
         FilterClass,
         Flags,
+        FlagChoices, // Source 2
         Float,
+        FloatChoices, // Source 2 (choices with float values)
         GameItemClass, // Source 2 (dota)
         GameUnitClass, // Source 2 (dota)
         InstanceFile,
         InstanceVariable,
         InstanceParm,
         Int, // Source 2
+        IntChoices, // Source 2 (choices with integer values)
         Integer,
         LocalAxis, // Source 2
         LocalPoint, // Source 2
