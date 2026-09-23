@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using FGDDumper;
 using ValveKeyValue;
 using ValveResourceFormat.Serialization.KeyValues;
@@ -45,6 +46,7 @@ public static class ConvarListToJson
         }
 
         string[] allLines = File.ReadAllLines(file);
+        var blanked = new List<string>();
 
         foreach (var line in allLines)
         {
@@ -75,9 +77,54 @@ public static class ConvarListToJson
                 conEntry.Cs2WorkshopWhitelisted = true;
             }
 
+            if (IsSensitive(conEntry))
+            {
+                conEntry.DefaultValue = string.Empty;
+                blanked.Add(conEntry.Name);
+            }
+
             conDump.Entries.Add(conEntry);
         }
 
+        if (blanked.Count > 0)
+        {
+            Logging.Log($"Blanked {blanked.Count} sensitive value(s): {string.Join(", ", blanked)}");
+        }
+
         return JsonSerializer.Serialize(conDump, JsonContext.Default.ConDump);
+    }
+
+    // `cvarlist` prints each convar's current value, not its default, so the dump would otherwise
+    // publish whatever the person running it has set, passwords and their player name included.
+
+    // Flags the engine puts on values it keeps from being queried or recorded, like server passwords.
+    private static readonly string[] SensitiveFlags = ["prot", "server_cant_query"];
+
+    private static readonly Regex SensitiveNamePattern = new(
+        "password|token_secret|encryptdata_key|decryptdata_key|_pkey$",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    // Values that identify the person or machine that made the dump.
+    private static readonly HashSet<string> SensitiveNames =
+    [
+        "name",
+        "hostname",
+        "soundsystem_device_used",
+        "cl_promoted_settings_acknowledged",
+        "ui_news_last_read_link",
+        "ui_playsettings_maps_workshop",
+    ];
+
+    private static bool IsSensitive(ConEntry entry)
+    {
+        // commands have no value to leak, and a boolean can't hold a secret
+        if (entry.DefaultValue is "cmd" or "true" or "false")
+        {
+            return false;
+        }
+
+        return entry.flags.Any(SensitiveFlags.Contains)
+            || SensitiveNames.Contains(entry.Name)
+            || SensitiveNamePattern.IsMatch(entry.Name);
     }
 }
